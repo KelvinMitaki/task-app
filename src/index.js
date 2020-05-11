@@ -8,46 +8,62 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.post("/users", (req, res) => {
-  const user = new User(req.body);
-  user
-    .save()
-    .then(() => res.status(201).send(user))
-    .catch((err) => res.status(400).send(err));
+app.post("/users", async (req, res) => {
+  try {
+    const user = new User(req.body);
+    await user.save();
+    res.status(201).send(user);
+  } catch (error) {
+    res.status(400).send(err);
+  }
 });
 
-app.post("/tasks", (req, res) => {
-  const task = new Task(req.body);
-  task
-    .save()
-    .then(() => res.status(201).send(task))
-    .catch((err) => res.status(400).send(err));
+app.post("/tasks", async (req, res) => {
+  try {
+    const task = new Task(req.body);
+    await task.save();
+    res.status(201).send(task);
+  } catch (error) {
+    res.status(400).send(err);
+  }
 });
 
-app.get("/users", (req, res) => {
-  User.find({})
-    .then((users) => res.send(users))
-    .catch((err) => res.status(500).send("Internal Server Error"));
+app.get("/users", async (req, res) => {
+  try {
+    await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
-app.get("/users/:id", (req, res) => {
-  const _id = req.params.id;
-  User.findById(_id)
-    .then((user) => res.send(user))
-    .catch((err) => res.status(404).send("User not found"));
+app.get("/users/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    const user = await User.findById(_id);
+    res.send(user);
+  } catch (error) {
+    res.status(404).send("User not found");
+  }
 });
 
-app.get("/tasks", (req, res) => {
-  Task.find({})
-    .then((tasks) => res.send(tasks))
-    .catch((err) => res.status(500).send("Intrnal server error"));
+app.get("/tasks", async (req, res) => {
+  try {
+    await Task.find({});
+    res.send(tasks);
+  } catch (error) {
+    res.status(500).send("Internal server error");
+  }
 });
 
-app.get("/tasks/:id", (req, res) => {
-  const _id = req.params.id;
-  Task.findById(_id)
-    .then((task) => res.send(task))
-    .catch((err) => res.status(404).send("No task found"));
+app.get("/tasks/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    await Task.findById(_id);
+    res.send(task);
+  } catch (error) {
+    res.status(404).send(" task found");
+  }
 });
 
 app.listen(PORT, () => console.log(`server started on port ${PORT}`));
