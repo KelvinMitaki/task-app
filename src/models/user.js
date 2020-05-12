@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bycrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const User = mongoose.model("User", {
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -19,6 +21,7 @@ const User = mongoose.model("User", {
   email: {
     type: String,
     required: true,
+    unique: true,
     lowercase: true,
     trim: true,
     validate(value) {
@@ -40,6 +43,50 @@ const User = mongoose.model("User", {
       }
     },
   },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
+
+userSchema.methods.generateAuthToken = async function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id.toString() }, "kevoh");
+  user.tokens = user.tokens.concat({ token });
+  await user.save();
+  return token;
+};
+
+userSchema.statics.findByCredentials = async (email, password) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error(
+      "The email and password you entered did not match our records. Please double-check and try again."
+    );
+  }
+  const isMatch = await bycrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new Error(
+      "The email and password you entered did not match our records. Please double-check and try again."
+    );
+  }
+
+  return user;
+};
+
+userSchema.pre("save", async function (next) {
+  const user = this;
+  if (user.isModified("password")) {
+    user.password = await bycrypt.hash(user.password, 8);
+  }
+  next();
+});
+
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

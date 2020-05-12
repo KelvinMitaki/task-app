@@ -6,9 +6,23 @@ router.post("/users", async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
-    res.status(201).send(user);
+    const token = await user.generateAuthToken();
+    res.status(201).send({ user, token });
   } catch (error) {
     res.status(400).send(error);
+  }
+});
+
+router.post("/users/login", async (req, res) => {
+  try {
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+    const token = await user.generateAuthToken();
+    res.send({ user, token });
+  } catch (error) {
+    res.status(404).send(error);
   }
 });
 
@@ -50,14 +64,14 @@ router.patch("/users/:id", async (req, res) => {
   }
   try {
     const _id = req.params.id;
-    const updatedUser = await User.findByIdAndUpdate(_id, req.body, {
-      runValidators: true,
-      new: true,
-    });
-    if (!updatedUser) {
+    const user = await User.findById(_id);
+    updates.forEach((update) => (user[update] = req.body[update]));
+    await user.save();
+
+    if (!user) {
       return res.status(404).send({ error: "No user found" });
     }
-    res.send(updatedUser);
+    res.send(user);
   } catch (error) {
     if (error.message.includes("ObjectId")) {
       return res.status(404).send({ error: "No user found" });
