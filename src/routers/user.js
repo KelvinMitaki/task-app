@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+const sharp = require("sharp");
 const User = require("../models/user");
 const auth = require("../middlewares/auth");
 const router = express.Router();
@@ -74,7 +75,11 @@ router.post(
   upload.single("avatar"),
   async (req, res) => {
     try {
-      req.user.avatar = req.file.buffer;
+      const buffer = await sharp(req.file.buffer)
+        .resize({ width: 250, height: 250 })
+        .png()
+        .toBuffer();
+      req.user.avatar = buffer;
       await req.user.save();
       res.send("Image uploaded successfully");
     } catch (error) {
@@ -102,6 +107,20 @@ router.get("/users/:id", async (req, res) => {
     if (error.message.includes("ObjectId")) {
       return res.status(404).send({ error: "No user found" });
     }
+    res.status(500).send(error);
+  }
+});
+
+// FETCHING PROFILE PICURES
+router.get("/users/:id/avatar", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || !user.avatar) {
+      throw new Error("Not found");
+    }
+    res.set("Content-Type", "image/png");
+    res.send(user.avatar);
+  } catch (error) {
     res.status(500).send(error);
   }
 });
@@ -145,6 +164,9 @@ router.delete("/users/me", auth, async (req, res) => {
 //DELETE AVATAR
 router.delete("/users/me/avatar", auth, async (req, res) => {
   try {
+    if (!req.user.avatar) {
+      throw new Error("No avatar to be deleted");
+    }
     req.user.avatar = undefined;
     await req.user.save();
     res.send("Avatar deleted successfully");
