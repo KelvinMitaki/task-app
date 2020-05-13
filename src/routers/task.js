@@ -14,8 +14,25 @@ router.post("/tasks", auth, async (req, res) => {
   }
 });
 router.get("/tasks", auth, async (req, res) => {
+  let obj = {
+    owner: req.user._id,
+  };
+  const sort = {};
+  if (req.query.completed === "true") {
+    obj = { ...obj, completed: true };
+  } else if (req.query.completed === "false") {
+    obj = { ...obj, completed: false };
+  }
+  if (req.query.sortBy) {
+    const parts = req.query.sortBy.split(":");
+    sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+  }
   try {
-    const tasks = await Task.find({ owner: req.user._id });
+    const tasks = await Task.find(obj, null, {
+      limit: parseInt(req.query.limit),
+      skip: parseInt(req.query.skip),
+      sort,
+    });
     res.send(tasks);
   } catch (error) {
     res.status(500).send("Internal server error");
