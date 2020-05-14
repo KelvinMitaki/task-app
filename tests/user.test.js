@@ -110,3 +110,20 @@ test("should upload avatar image", async () => {
   const user = await User.findById(testUser._id);
   expect(user.avatar).toEqual(expect.any(Buffer));
 });
+
+test("should update valid user fields", async () => {
+  const response = await request(app)
+    .patch("/users/me")
+    .set("Authorization", `Bearer ${testUser.tokens[0].token}`)
+    .send({
+      name: "Kelvin Mitaki",
+      email: "kevinkhalifa911@gmail.com",
+    })
+    .expect(200);
+  const user = await User.findById(response.body._id);
+
+  expect(user).toMatchObject({
+    name: "Kelvin Mitaki",
+    email: "kevinkhalifa911@gmail.com",
+  });
+});
