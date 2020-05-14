@@ -5,13 +5,18 @@
   "main": "app.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "env-cmd -f ./src/config/dev.env nodemon src/index.js"
+    "dev": "env-cmd -f ./src/config/dev.env nodemon src/index.js",
+    "test": "env-cmd -f ./src/config/test.env jest --watch --runInBand --detectOpenHandles"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@sendgrid/mail": "^7.1.0",
+    "@types/jest": "^25.2.2",
     "@types/mongoose": "^5.7.16",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
@@ -23,6 +28,8 @@
     "validator": "^13.0.0"
   },
   "devDependencies": {
-    "env-cmd": "^10.1.0"
+    "env-cmd": "^10.1.0",
+    "jest": "^26.0.1",
+    "supertest": "^4.0.2"
   }
 }
