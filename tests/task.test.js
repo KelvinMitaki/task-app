@@ -16,3 +16,12 @@ test("should create a task for a logged in user", async () => {
   expect(task).not.toBeNull();
   expect(task.completed).toBe(false);
 });
+
+test("should fetch tasks for a specific user", async () => {
+  const response = await request(app)
+    .get("/tasks")
+    .set("Authorization", `Bearer ${testUser.tokens[0].token}`)
+    .send()
+    .expect(200);
+  expect(response.body.length).toBe(2);
+});
