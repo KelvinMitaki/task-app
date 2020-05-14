@@ -1,28 +1,9 @@
 const request = require("supertest");
 const app = require("../src/app");
 const User = require("../src/models/user");
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
+const { setupDatabase, testUser } = require("./fixtures/db");
 
-const userId = new mongoose.Types.ObjectId();
-
-const testUser = {
-  _id: userId,
-  name: "test",
-  email: "test@gmail.com",
-  password: "test@gmail.com",
-  age: 25,
-  tokens: [
-    {
-      token: jwt.sign({ _id: userId }, process.env.JWT_SECRET),
-    },
-  ],
-};
-
-beforeEach(async () => {
-  await User.deleteMany();
-  await new User(testUser).save();
-});
+beforeEach(setupDatabase);
 
 test("should signup a new user", async () => {
   const response = await request(app)
@@ -126,4 +107,14 @@ test("should update valid user fields", async () => {
     name: "Kelvin Mitaki",
     email: "kevinkhalifa911@gmail.com",
   });
+});
+
+test("should not update invalid user fields", async () => {
+  await request(app)
+    .patch("/users/me")
+    .set("Authorization", `Bearer ${testUser.tokens[0].token}`)
+    .send({
+      location: "Rongai",
+    })
+    .expect(400);
 });
