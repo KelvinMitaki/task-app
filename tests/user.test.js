@@ -99,3 +99,14 @@ test("should delete profile for authenticated user", async () => {
 test("should not delete profile for unauthenticated users", async () => {
   await request(app).delete("/users/me").send().expect(401);
 });
+
+test("should upload avatar image", async () => {
+  await request(app)
+    .post("/users/me/avatar")
+    .set("Authorization", `Bearer ${testUser.tokens[0].token}`)
+    .attach("avatar", "tests/fixtures/profile-pic.jpg")
+    .expect(200);
+
+  const user = await User.findById(testUser._id);
+  expect(user.avatar).toEqual(expect.any(Buffer));
+});
